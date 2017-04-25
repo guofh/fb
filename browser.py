@@ -51,7 +51,7 @@ class MechanizeBrowser():
         self.br.set_handle_robots(False)
 
         #Follows refresh 0 but not hangs on refresh > 0
-        self.br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
+        #self.br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=30)
 
         #debugging?
         #self.br.set_debug_http(True)
@@ -121,6 +121,13 @@ class SeleniumBrowser():
             dcap["acceptSslCerts"] = True
             dcap['phantomjs.cli.args'] = ['--web-security=false','--ignore-ssl-errors=true','--ssl-protocol=any']
             #dcap['proxy'] = {'httpProxy': proxy,'ftpProxy': proxy,'sslProxy': proxy,'noProxy': None}
+            #chrome_options = webdriver.ChromeOptions()
+            #chrome_options.add_argument("ignore-certificate-errors=true")
+            #chrome_options.add_argument("--web-security=false")
+            #chrome_options.add_argument("--ssl-protocol=any")
+            #chrome_options.add_argument('--proxy-server='+ht+'://'+proUrl+':'+port)
+            #browser = webdriver.Chrome(chrome_options=chrome_options)
+
             browser = webdriver.PhantomJS(desired_capabilities=dcap,service_args=s_args)
             #self.browser1 = webdriver.PhantomJS(desired_capabilities=dcap)
             #self.browser1.capabilities["acceptSslCerts"] = True
@@ -130,18 +137,32 @@ class SeleniumBrowser():
 
             #self.browser1.capabilities["proxy"] = ht+"://"+proUrl+':'+port
 
+            #profile = webdriver.FirefoxProfile()
+            #profile.set_preference('network.proxy.type', 1)
+            #profile.set_preference('network.proxy.http', proUrl)
+            #profile.set_preference('network.proxy.http_port', port)
+            #profile.set_preference('network.proxy.ssl', proUrl)
+            #profile.set_preference('network.proxy.ssl_port', port)
+            #profile.update_preferences()
+            #browser = webdriver.Firefox(profile)
+
         else:
-            browser = webdriver.PhantomJS(service_args=['--ignore-ssl-errors=true'])
+            #browser = webdriver.Firefox()
+            #browser = webdriver.Firefox(service_args=['--ignore-ssl-errors=true'])
+            chrome_options = webdriver.ChromeOptions()
+            chrome_options.add_argument("ignore-certificate-errors");
+            browser = webdriver.Chrome(chrome_options=chrome_options)
+
 
 
         # 隐式等待5秒，可以自己调节
         browser.implicitly_wait(30)
         # 设置10秒页面超时返回，类似于requests.get()的timeout选项，driver.get()没有timeout选项
         # 以前遇到过driver.get(url)一直不返回，但也不报错的问题，这时程序会卡住，设置超时选项能解决这个问题。
-        browser.set_page_load_timeout(10)
+        browser.set_page_load_timeout(30)
         # 设置10秒脚本超时时间
-        browser.set_script_timeout(10)
-        #print browser.capabilities
+        browser.set_script_timeout(30)
+        print browser.capabilities
 
         browser.maximize_window()
 
@@ -183,7 +204,7 @@ class SeleniumBrowser():
         try:
             browser.get(self.main_page);
             time.sleep(random.randint(1,15))
-            #print browser.page_source
+            print browser.page_source
         except Exception,e:
             #self.__close_browser__(browser)
             print "browser open url error!",e
@@ -284,23 +305,22 @@ class SeleniumBrowser():
 if __name__ == "__main__":
 
     ht = 'http'
-    ip = '122.96.59.105'
-    port = '82'
+    ip = '59.48.65.11'
+    port = '8000'
 
     #url = 'http://1212.ip138.com/ic.asp'
     #url = 'https://www.baidu.com'
-    #url = 'http://icanhazip.com/'
-    url = 'https://www.woquba.cn'
+    url = 'http://icanhazip.com/'
+    #url = 'https://www.woquba.cn'
     #url = 'http://ip.chinaz.com'
     #url = 'http://www.liuxiangchugui.com'
 
     ab = SeleniumBrowser()
-    #ab = AutoBrowser()
-    #ab.init_browser()
+    #ab.open_url(url)
+    ab.open_url_proxy(url,ht,ip,port)
 
-    ab.open_url(url)
-
-    #ab.open_url_proxy(url,ht,ip,port)
-
-
+    #tt = MechanizeBrowser()
+    #tt.init_browser()
+    #tt.open_url_proxy(url,ht,ip,port)
+    #tt.open_url(url)
 
