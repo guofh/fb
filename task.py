@@ -8,6 +8,7 @@ import threading
 import time
 import datetime
 import random
+import requests
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -16,7 +17,7 @@ class auto_brush():
 
     p = proxy.proxy();
 
-    urls=['https://www.woquba.cn','https://www.baidu.com','http://www.ip138.com']
+    urls=['https://www.woquba.cn']
     url_weight=[]
 
     ips=[]
@@ -43,22 +44,29 @@ class auto_brush():
     #########################################################################
     def run(self):
         self.__init_url_weight__()
-        self.__update_ips__()
+        #self.__update_ips__()
 
 
         while True:
+
+            #print 'residue task num =',self.residue_task,'residue_sec =',self.residue_sec
+
             self.__update_task__()
             if len(self.ips)<=0 :
                 self.__update_ips__()
 
-            if len(self.threads) < self.residue_task:
+            if self.residue_task>0:
+            #if len(self.threads) < self.residue_task:
                 self.__add_thread_task__()
                 self.residue_task = self.residue_task-1
-                print "add thread task,residue task is",self.residue_task
+                #print "add thread task,residue task is",self.residue_task
+            else:
+                time.sleep(self.residue_sec)
 
-            if self.residue_sec >= self.residue_task:
+
+            if self.residue_sec > self.residue_task:
                 st = self.residue_sec/self.residue_task
-                print "sleep time is",st,"residue_sec is ",self.residue_sec
+                #print "sleep time is",st,"residue_sec is ",self.residue_sec
                 time.sleep(st)
                 self.residue_sec = self.residue_sec-st
     #########################################################################
@@ -77,7 +85,6 @@ class auto_brush():
                 self.last_hour = hour
                 self.residue_sec = 3600
                 self.residue_task = self.last_task_num*len(self.urls)
-                print self.rand,self.last_task_num
 
             if ((minite - self.last_min)>5) | (hour is not self.last_hour):
                 self.__update_ips__()
@@ -95,12 +102,12 @@ class auto_brush():
                 self.threads.remove(t)
                 #print "thread release,thread num ",t
 
-        if len(self.threads)<self.thread_num:
-            index = self.__get_url_index__()
-            t = threading.Thread(target=self.__task__,args=(index,))
-            self.threads.append(t)
-            #t.setDaemon(True)
-            t.start()
+        #if len(self.threads)<self.thread_num:
+        index = self.__get_url_index__()
+        t = threading.Thread(target=self.__task__,args=(index,))
+        self.threads.append(t)
+        #t.setDaemon(True)
+        t.start()
 
 
     #########################################################################
@@ -109,15 +116,30 @@ class auto_brush():
     #
     #########################################################################
     def __task__(self,index):
+
         b = browser.SeleniumBrowser()
         self.url_weight[index] = self.url_weight[index]+1
+        flag = False
 
+        while flag is False:
+            try:
+                proxyIp = random.choice(self.ips)
+                requests.get('http://www.baidu.com', timeout=5,proxies={"http":"http://"+proxyIp})
+            except:
+                print 'connect failed',proxyIp
+                self.ips.remove(proxyIp)
+            else:
+                flag = True
+
+        proxyL = proxyIp.split(':')
         ht = 'http'
-        ip = '117.90.1.128'
-        port = '9000'
+        ip = proxyL[0]
+        port = proxyL[1]
+        self.ips.remove(proxyIp)
+        print 'start task.....proxy is',proxyL,'residue_sec is',self.residue_sec,'residue_task is',self.residue_task,'residue_ips is',len(self.ips)
 
-        #b.open_url_proxy(self.urls[index],ht,ip,port)
-        b.open_url(self.urls[index])
+        b.open_url_proxy(self.urls[index],ht,ip,port)
+        #b.open_url(self.urls[index])
         self.url_weight[index] = self.url_weight[index]-1
         #print "thread start,thread num is",len(self.threads),index
 
@@ -157,7 +179,6 @@ class auto_brush():
                 minNum = self.url_weight[i]
                 index = i
 
-        print self.url_weight,'website is',self.urls[index],'weight is',minNum
         return index
 
 
