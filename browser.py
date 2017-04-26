@@ -63,8 +63,13 @@ class MechanizeBrowser():
 
     def open_url(self,url):
 
-        r = self.br.open(url)
-        print r.read()
+        try:
+            r = self.br.open(url)
+            return r
+        except Exception,e:
+            print "mechanize open url error",e
+            return None
+        #print r.read()
         #print r.geturl()
         #print self.br.response().read()
         #print self.br.title()
@@ -107,35 +112,20 @@ class SeleniumBrowser():
             # 不载入图片，爬页面速度会快很多
             #dcap["phantomjs.page.settings.loadImages"] = False
             # 设置代理
-            #service_args = ['--proxy='+proUrl+':'+port,'--proxy-type=socks5']
             s_args = ['--web-security=no','--ignore-ssl-errors=yes','--ssl-protocol=any']
-            #s_args = ['--web-security=no','--ignore-ssl-errors=true', '--ssl-protocol=any','--proxy='+proUrl+':'+port,'--proxy-type='+ht]
-            #s_args = ['--ignore-ssl-errors=true', '--ssl-protocol=any','--proxy='+proUrl+':'+port,'--proxy-type='+ht,'--proxy-auth=username:password']
-            #service_args = ['--proxy='+proUrl+':'+port]
-            #print s_args
-            #打开带配置信息的phantomJS浏览器
-            #self.browser1 = webdriver.PhantomJS(desired_capabilities=dcap,service_args=s_args)
-            #self.browser1 = webdriver.PhantomJS(service_args=s_args)
 
             dcap['proxy'] = {'proxyType':'MANUAL','httpProxy': proxy,'ftpProxy': proxy,'sslProxy': proxy,'noProxy': None}
             dcap["acceptSslCerts"] = True
             dcap['phantomjs.cli.args'] = ['--web-security=false','--ignore-ssl-errors=true','--ssl-protocol=any']
-            #dcap['proxy'] = {'httpProxy': proxy,'ftpProxy': proxy,'sslProxy': proxy,'noProxy': None}
+
             #chrome_options = webdriver.ChromeOptions()
-            #chrome_options.add_argument("ignore-certificate-errors=true")
-            #chrome_options.add_argument("--web-security=false")
-            #chrome_options.add_argument("--ssl-protocol=any")
+            #chrome_options.add_argument('--allow-running-insecure-content')
+            #chrome_options.add_argument('--disable-web-security')
+            #chrome_options.add_argument('--no-referrers')
             #chrome_options.add_argument('--proxy-server='+ht+'://'+proUrl+':'+port)
             #browser = webdriver.Chrome(chrome_options=chrome_options)
 
             browser = webdriver.PhantomJS(desired_capabilities=dcap,service_args=s_args)
-            #self.browser1 = webdriver.PhantomJS(desired_capabilities=dcap)
-            #self.browser1.capabilities["acceptSslCerts"] = True
-            #self.browser1.capabilities["proxy"] = {u"proxy": proUrl+':'+port,u"proxy-type":ht}
-            #self.browser1.capabilities["proxy"] = {u"proxyType":u"MANUAL",u"httpProxy": proUrl+':'+port}
-            #self.browser1.capabilities['proxy'] = {'proxyType': 'MANUAL','httpProxy': proxy,'ftpProxy': proxy,'sslProxy': proxy,'noProxy': None}
-
-            #self.browser1.capabilities["proxy"] = ht+"://"+proUrl+':'+port
 
             #profile = webdriver.FirefoxProfile()
             #profile.set_preference('network.proxy.type', 1)
@@ -148,10 +138,10 @@ class SeleniumBrowser():
 
         else:
             #browser = webdriver.Firefox()
-            #browser = webdriver.Firefox(service_args=['--ignore-ssl-errors=true'])
-            chrome_options = webdriver.ChromeOptions()
-            chrome_options.add_argument("ignore-certificate-errors");
-            browser = webdriver.Chrome(chrome_options=chrome_options)
+            browser = webdriver.PhantomJS(service_args=['--ignore-ssl-errors=true'])
+            #chrome_options = webdriver.ChromeOptions()
+            #chrome_options.add_argument("ignore-certificate-errors");
+            #browser = webdriver.Chrome(chrome_options=chrome_options)
 
 
 
@@ -162,7 +152,7 @@ class SeleniumBrowser():
         browser.set_page_load_timeout(30)
         # 设置10秒脚本超时时间
         browser.set_script_timeout(30)
-        print browser.capabilities
+        #print browser.capabilities
 
         browser.maximize_window()
 
@@ -204,7 +194,7 @@ class SeleniumBrowser():
         try:
             browser.get(self.main_page);
             time.sleep(random.randint(1,15))
-            print browser.page_source
+            #print browser.page_source
         except Exception,e:
             #self.__close_browser__(browser)
             print "browser open url error!",e
